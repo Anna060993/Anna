@@ -21,7 +21,7 @@ garch11<-function(n,n.start=200,theta=c(mi,omega,alpha,beta))
   alpha<-theta[3]
   beta<-theta[4]
   y<-rep(0,(n+n.start))        # Serie dei livelli
-  h<-rep(0,(n+n.start))        # Serie delle arianze condizionate
+  h<-rep(0,(n+n.start))        # Serie delle varianze condizionate
   h[1]<-omega/(1-alpha-beta)   # Si inizializza con la varianza marginale
   y[1]<-rnorm(1,mi,sqrt(h[1])) # Coerentemente con l'informazione disponibile, si genera un primo valore per 
                                # inizializzare la serie dei livelli da una N(mi,h[1]) 
@@ -196,8 +196,8 @@ hessian<-function(theta)
 # 2.Stima
 # 3.Diagnostica
 
-# Si genera una serie di 500 osservazioni da un GARCH(1,1) con innovazioni gaussiane ed i 
-# seguenti valori dei parametri:
+# Si genera una serie di 500 osservazioni da un GARCH(1,1) con innovazioni gaussiane ed i seguenti valori 
+# dei parametri:
 mi<-0.1
 omega<-0.05
 alpha<-0.2
@@ -242,7 +242,7 @@ asimm<-function(x) # Funzione per il calcolo dell'indice di asimmetria
 }
 curtosi(y) # >3
 par(mfrow=c(1,1))
-asimm(y) # circa =0
+asimm(y) # Circa =0
 qqnorm(y)
 qqline(y) # Code più pesanti di quelle che si avrebbero sotto normalità
 
@@ -270,7 +270,7 @@ pval<-2*pnorm(tstat2,lower.tail=F)
 tabella_num<-data.frame(theta.hat.num,Std.Err,tstat2,pval)
 colnames(tabella)_num<-c("Coefficienti","Errori standard","Statistica t","p-value")
 print(tabella_num)
-cat("Verosimiglianza in theta.hat=",fit.y.num$value,"\n")
+cat("Verosimiglianza nel vettore dei parametri stimati=",fit.y.num$value,"\n")
 cat("Codice di convergenza=",fit.y.num$convergence,"\n")
 
 # Controllo:
@@ -278,9 +278,7 @@ cat("Codice di convergenza=",fit.y.num$convergence,"\n")
 # fit = garchFit(~ garch(1, 1)+1,data=y,trace=F)
 # fit
  
-
-# Diagnostica del modello: analisi dei residui standardizzati.
-
+# Diagnostica del modello: analisi dei residui.
 # Calcolo della serie delle varianze condizionate:
 h<-rep(0,n)
 mi.hat<-theta.hat.num[1]
@@ -309,7 +307,7 @@ qqline(res.st,col=2)
 curtosi(res.st)
 # Test di Jarque e Bera. 
 # Il test verifica l'ipotesi nulla di normalità dei residui standardizzati tenendo conto congiuntamente
-# di due misure, cioè curtosi e asimmetria.
+# di due misure, curtosi e asimmetria.
 S<-asimm(res.st)
 K<-curtosi(res.st)
 JB<-((n-1)/6)*(S^2+((K-3)^2)/4)
@@ -370,53 +368,6 @@ print(tabella_anum)
 print(tabella_ana)
 
 
-########################## 
-# Diagnostica del modello: analisi dei residui.
-# per procedura numerica
-h<-rep(0,n)
-omega.hat<-theta.hat.num[2]
-alpha.hat<-theta.hat.num[3]
-beta.hat<-theta.hat.num[4]
-h[1]<-omega.hat/(1-alpha.hat-beta.hat)
-for (i in 2:n) { h[i]=omega.hat+alpha.hat*y2[i-1]+beta.hat*h[i-1]  }  # valori di h(t)
-# Residui standardizzati:
-res.std.num<-(y-theta.hat.num[1])/(h[2:n])
-head(res.std.num)
-hist(res.std.num)
-summary(res.std.num)
-par(mfrow=c(1,1))
-qqnorm(res.std.num)
-qqline(res.std.num)
-par(mfrow=c(2,1))
-cfs(res.std.num,15,new=T)
-cfs(res.std.num^2,15,new=T)
-curtosi(res.std.num) 
-asimm(res.std.num) 
-jarque.bera.test(x)
-
-# Diagnostica del modello: analisi dei residui.
-# per procedura analitica
-# Calcolo la serie delle varianze condizionate:
-res.std.ana<-y[2:n]/sqrt(h[2:n]) # Residui semplici/sigma.t
-# Correlazione dei residui semplici al quadrato:
-source("sse")
-cfs(res.std.ana,15,new=T)
-cfs(res.std.ana^2,15,new=T)
-qqnorm(res.std.ana)
-qqline(res.std.ana)
-curtosi(res.std.ana) 
-cat("Curtosi dei residui standardizzati:", curtosi(res.std.ana), "\n")
-
-###################################
-###################################
-# -------- analisi diagnostiche -----------------
-cfs(res.std,20,new=F)
-cfs(res.std^2,20,new=F)
-hist(res.std,20)
-qqnorm(res.std)
-qqline(res.std)
-curtosi(res.std)
-garch.stats(res.std, 10)
 
 ###################################
 #################################
