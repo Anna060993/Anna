@@ -8,10 +8,11 @@ options(warn=-1)
 # Funzioni utilizzate nel corso del programma
 #######################
 
-# Funzione per simulare una serie storica di lunghezza arbitraria e con un generico vettore di parametri.
-# In input: n (ampiezza della serie) e theta (vettore contente 4 parametri, nell'ordine: mi,omega,alpha,beta).
-# In output: una matrice di dimensione nx2, la prima colonna contiene i valori della serie,
-# la seconda quelli della varianza condizionata.
+# Funzione per simulare una serie storica di lunghezza arbitraria con un generico vettore di parametri.
+# La funzione fornisce anche la serie delle varianze condizionate. In dettaglio:
+# - in input:  n (ampiezza della serie) e theta (vettore contente 4 parametri, nell'ordine: mi,omega,alpha,beta).
+# - in output: una matrice di dimensione nx2, la prima colonna contiene i valori della serie,
+#              la seconda quelli della varianza condizionata.
 
 garch11<-function(n,n.start=200,theta=c(mi,omega,alpha,beta)) 
 {
@@ -57,18 +58,18 @@ lvgarch11<-function(lambda)
   e2<-e2[2:n]
   # Stima della sola log-verosimiglianza condizionata:
   l<-sum(-0.5*log(h)-0.5*(e2/h))
-  # Per la stazionarietà in senso debole: si assegnano valori estremamente bassi della log-verosimiglianza
-  # a quelle coppie (alpha,beta) per cui tale condizione non è verificata.
+  # Per la stazionarietÃ  in senso debole: si assegnano valori estremamente bassi della log-verosimiglianza
+  # a quelle coppie (alpha,beta) per cui tale condizione non Ã¨ verificata.
   if (alpha+beta>=1) l<--10^(9)
   return(l) 
 }
 
-#### Funzione per il calcolo del gradiente: ####
+#### Funzione per il calcolo del gradiente ####
 
 grad11<-function(lambda)
 {
   mi<-lambda[1]
-  # La trasformazione esponenziale assicura il vincolo di positività per i parametri omega, alpha e beta:
+  # La trasformazione esponenziale assicura il vincolo di positivitÃ  per i parametri omega, alpha e beta:
   omega<-exp(lambda[2])
   alpha<-exp(lambda[3])
   beta<-exp(lambda[4])
@@ -107,7 +108,7 @@ grad11<-function(lambda)
   return(c(dlvmi,dlvomega,dlvalpha,dlvbeta)) 
 }
 
-#### Funzione per il calcolo della matrice hessiana: ####
+#### Funzione per il calcolo della matrice hessiana ####
 
 hessian<-function(theta) 
 {
@@ -119,8 +120,6 @@ hessian<-function(theta)
   h[1]<-omega/(1-alpha-beta)
   e<-y-mi 
   e2<-e^2
-  e1<-y1-mi
-  e12<-e1^2
   
   for (i in 2:n) 
   { 
@@ -197,15 +196,14 @@ hessian<-function(theta)
 # 2.Stima
 # 3.Diagnostica
 
-
-# Supponiamo di generare una serie di 500 osservazioni da un GARCH(1,1) con innovazioni gaussiane ed i 
+# Si genera una serie di 500 osservazioni da un GARCH(1,1) con innovazioni gaussiane ed i 
 # seguenti valori dei parametri:
-mi<-0.10
+mi<-0.1
 omega<-0.05
 alpha<-0.2
 beta<-0.7
 
-# Poichè la funzione "garch11" restituisce una matrice, per recuperare la serie dei livelli si seleziona 
+# PoichÃ¨ la funzione "garch11" restituisce una matrice, per recuperare la serie dei livelli si seleziona 
 # la prima colonna. La seconda colonna restituisce la varianza condizionata.
 n<-500
 set.seed(100)
@@ -213,64 +211,50 @@ dati<-garch11(n)
 y<-dati[,1]
 var.cond<-dati[,2] 
 
-# E' utile avere un riscontro grafico del fatto che la serie simulata presenta le tipiche caratteristiche 
-# empiriche della serie dei rendimenti.
-par(mfrow=c(2,1),mar=c(4,4,2,1))
-plot(y,type="l",main="Serie dei livelli",xlab="t")
-plot(var.cond,type="l",main="Serie delle varianze condizionate",xlab="t",ylab="var. cond.")
-
-# Operazioni preliminari:
-y2<-y^2                  	# valori di y(t)^2
-y1<-c(mean(y),y[1:n-1])   # valori di y(t)
-y12<-y1^2 				        # valori di y(t-1)
-
 # E' utile avere un riscontro grafico del fatto che la serie simulata presenti le tipiche caratteristiche 
 # empiriche delle serie dei rendimenti. Si tratta di semplici analisi preliminari, indispensabili quando
-# si vuole risalire al vero processo generatore dei dati non noto. In questo caso, in cui è noto dato che 
-# la serie è stata simulata, tali analisi servono solo a confermare alcune note evidenze empiriche.
+# si vuole risalire al vero processo generatore dei dati non noto. In questo caso, in cui Ã¨ noto dato che 
+# la serie Ã¨ stata simulata, tali analisi servono solo a confermare alcune note evidenze empiriche.
 # I rendimenti risultano stazionari in media (pari a mi) ed eteroschedastici.
 par(mfrow=c(2,1),mar=c(4,4,2,1))
 plot(y,type="l",main="Serie dei livelli",xlab="t")
 abline(h=.1,col=2)
 plot(var.cond,type="l",main="Serie delle varianze condizionate",xlab="t",ylab="var. cond.")
-# La serie dei livelli è incorrelata:
+# La serie dei livelli Ã¨ incorrelata:
 par(mfrow=c(2,1),mar=c(4,4,3,3))
 acf(y)
 pacf(y)
-# Mentre non lo è quella dei quadrati dei livelli:
+# Mentre non lo Ã¨ quella dei quadrati dei livelli:
 acf(y2)
 pacf(y2)
-# La distribuzione marginale del processo leptocurtica. 
-asimm=function(x)
-{
-  n=length(x)
-  m3=mean((x-mean(x))^3)
-  m2=sd(x)
-  return(m3/m2^3)
-}
+# La distribuzione marginale del processo Ã¨ simmetrica e leptocurtica. 
 curtosi<-function(x) # Funzione per il calcolo della curtosi
 {
-  m4<-mean((x-mean(x))^4)
+  m4<-mean((x-mean(x))^4) # Momento quarto centrale
   m2<-var(x)
-  return(m4/m2^2)
+  return(m4/(m2^2))
+}
+asimm<-function(x) # Funzione per il calcolo dell'indice di asimmetria
+{
+  m3<-mean((x-mean(x))^3) # Momento terzo centrale
+  m2<-sd(x)
+  return(m3/(m2^3))
 }
 curtosi(y) # >3
 par(mfrow=c(1,1))
-# Distribuzione centrata sulla media, presenza di simmetria e leptocurtosi
-hist(y)
-asimm(y)
+asimm(y) # circa =0
 qqnorm(y)
-qqline(y) # Code più pesanti di quelle che si avrebbero sotto Normalità.
+qqline(y) # Code piÃ¹ pesanti di quelle che si avrebbero sotto normalitÃ 
 
 #### Stima del modello con gradiente ed hessiano numerici ####
 
 fit.y.num<-optim(par=c(0.15,log(0.05),log(0.1),log(0.7)),lvgarch11,gr=NULL,method="BFGS",
                  control=list(fnscale=-1,maxit=200),hessian=T)
-# Per la proprietà di equivarianza della stima di massima verosimiglianza:
+# Per la proprietÃ  di equivarianza della stima di massima verosimiglianza:
 theta.hat.num<-c(fit.y.num$par[1],exp(fit.y.num$par[2:4]))
 theta.hat.num          # Valori dei parametri stimati 
 fit.y.num$value        # Valore massimo della log-verosimiglianza
-fit.y.num$convergence  # Se =0, l'algoritmo è arrivato a convergenza
+fit.y.num$convergence  # Se =0, l'algoritmo Ã¨ arrivato a convergenza
 # Stima della matrice di varianza e covarianza:
 q<-diag(theta.hat.num)
 j<-(solve(q)%*%(-fit.y.num$hessian)%*%solve(t(q)))/n
@@ -293,6 +277,52 @@ cat("Codice di convergenza=",fit.y.num$convergence,"\n")
 # library(fGarch)
 # fit = garchFit(~ garch(1, 1)+1,data=y,trace=F)
 # fit
+ 
+
+# Diagnostica del modello: analisi dei residui standardizzati.
+
+# Calcolo della serie delle varianze condizionate:
+h<-rep(0,n)
+mi.hat<-theta.hat.num[1]
+omega.hat<-theta.hat.num[2]
+alpha.hat<-theta.hat.num[3]
+beta.hat<-theta.hat.num[4]
+h[1]<-omega.hat/(1-alpha.hat-beta.hat)
+for (i in 2:n) 
+{ 
+  h[i]<-omega.hat+alpha.hat*((y[i-1]-mi.hat)^2)+beta.hat*h[i-1]  
+}
+# Serie dei residui standardizzati:
+res.st<-(y[2:n]-mi.hat)/sqrt(h[2:n])
+
+# Correlazione dei residui al quadrato:
+par(mfrow=c(1,2),mar=c(4,4,3,3))
+acf(res.st^2)
+pacf(res.st^2)
+# ACF e PACF evidenziano incorrelazione dei residui standardizzati al quadrato.
+# Significa che Ã¨ stata colta la relazione di dipendenza osservata sui quadrati dei rendimenti. 
+
+# Verifica dell'assunto di normalitÃ .
+hist(res.st,main="Istogramma")
+qqnorm(res.st)
+qqline(res.st,col=2)
+curtosi(res.st)
+# Test di Jarque e Bera. 
+# Il test verifica l'ipotesi nulla di normalitÃ  dei residui standardizzati tenendo conto congiuntamente
+# di due misure, cioÃ¨ curtosi e asimmetria.
+S<-asimm(res.st)
+K<-curtosi(res.st)
+JB<-((n-1)/6)*(S^2+((K-3)^2)/4)
+JB
+# Il valore della statistica test JB va confrontato con i quantili di una Chi-quadro con 2 gradi di libertÃ .
+# Calcolo del p-value:
+pchisq(JB,df=2,lower.tail=F) 
+# L'ipotesi nulla H0 viene accettata: i residui standardizzati seguono una distribuzione normale.
+
+# Oppure si puÃ² usare la libreria tseries: 
+# library(tseries)
+# jarque.bera.test(res.st)
+    
 
 #### Stima del modello con gradiente analitico ed hessiano numerico ####
 
@@ -301,7 +331,7 @@ fit.y.an1<-optim(par=c(0.15,log(0.05),log(0.1),log(0.7)),lvgarch11,gr=grad11,met
 theta.hat.an1<-c(fit.y.an1$par[1],exp(fit.y.an1$par[2:4]))
 theta.hat.an1          # Valori dei parametri stimati 
 fit.y.an1$value        # Valore massimo della log-verosimiglianza
-fit.y.an1$convergence  # Se =0, l'algoritmo è arrivato a convergenza
+fit.y.an1$convergence  # Se =0, l'algoritmo Ã¨ arrivato a convergenza
 q<-diag(c(1,theta.hat.an1[2:4]))
 varAn1<-solve(solve(q)%*%(-fit.y.num$hessian)%*%solve(t(q)))
 varAn1                 # Stima della matrice di varianza e covarianza
@@ -454,7 +484,7 @@ print(tab1)
 # Faccio lo stesso con n=1000 e n=2000: 
 # come cambia la differenza tra varianza stimata e varianza teorica 
 # all'aumentare della lunghezza della serie? 
-# Si ottengono varianze sempre più precise
+# Si ottengono varianze sempre piÃ¹ precise
 # La varianza campionaria tende a stimare sempre meglio la varianza 
 # marginale del processo.
 
@@ -512,7 +542,7 @@ c1<-rep(0,n-1)
 dlt=gradt(theta.hat.an1)    
 k=4
 n<-length(y)
-i0=matrix(0,nrow=k,ncol=k)   #Ã¨ la matrice identitÃ¨ I di zeri
+i0=matrix(0,nrow=k,ncol=k)   #ÃƒÂ¨ la matrice identitÃƒÂ¨ I di zeri
 for (i in 2:n)   
 {
   i0=i0+(dlt[i-1,])%*%t(dlt[i-1,])  #sto sommando n-1 termini
