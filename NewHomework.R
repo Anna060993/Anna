@@ -248,7 +248,7 @@ qqline(y) # Code più pesanti di quelle che si avrebbero sotto normalità
 
 #### Stima del modello con gradiente ed hessiano numerici ####
 
-fit.y.num<-optim(par=c(0.15,log(0.05),log(0.1),log(0.7)),lvgarch11,gr=NULL,method="BFGS",
+fit.y.num<-optim(par=c(0.1,log(0.05),log(0.2),log(0.7)),lvgarch11,gr=NULL,method="BFGS",
                  control=list(fnscale=-1,maxit=200),hessian=T)
 # Per la proprietà di equivarianza della stima di massima verosimiglianza:
 theta.hat.num<-c(fit.y.num$par[1],exp(fit.y.num$par[2:4]))
@@ -279,6 +279,7 @@ cat("Codice di convergenza=",fit.y.num$convergence,"\n")
 # fit
  
 # Diagnostica del modello: analisi dei residui.
+  
 # Calcolo della serie delle varianze condizionate:
 h<-rep(0,n)
 mi.hat<-theta.hat.num[1]
@@ -324,7 +325,7 @@ pchisq(JB,df=2,lower.tail=F)
 
 #### Stima del modello con gradiente analitico ed hessiano numerico ####
 
-fit.y.an1<-optim(par=c(0.15,log(0.05),log(0.1),log(0.7)),lvgarch11,gr=grad11,method="BFGS",
+fit.y.an1<-optim(par=c(0.1,log(0.05),log(0.2),log(0.7)),lvgarch11,gr=grad11,method="BFGS",
                  control=list(fnscale=-1,maxit=200),hessian=T)
 theta.hat.an1<-c(fit.y.an1$par[1],exp(fit.y.an1$par[2:4]))
 theta.hat.an1          # Valori dei parametri stimati 
